@@ -1,39 +1,66 @@
 {
   "type": "Catalog",
+  "id": "oam-portolan",
   "stac_version": "1.1.0",
-  "stac_extensions": [
-    "https://schemas.portolan-sdi.org/portolan/v0.1.1/schema.json"
-  ],
-  "id": "example-catalog",
-  "title": "Example Catalog",
-  "description": "TODO(setup): one or two sentences saying what this catalog holds, who produced the data, and who it is for. A person and an agent both read this first.",
+  "description": "A static, cloud-native mirror of the 21,863 scenes in [OpenAerialMap](https://imagery.hotosm.org/), the open satellite, aircraft and drone imagery service run by the [Humanitarian OpenStreetMap Team](https://www.hotosm.org/). Every scene is a STAC item that points at its Cloud Optimized GeoTIFF on OpenAerialMap's own storage, so no imagery is copied. Scenes are split into three collections by license, because OpenAerialMap licenses each image separately: CC BY 4.0, CC BY-SA 4.0 and CC BY-NC 4.0. Each collection publishes an items.parquet index for searching every scene in one read. Agents start at [AGENTS.md](https://source.coop/geospatialjeff/oam-portolan/AGENTS.md).",
   "links": [
     {
-      "rel": "root",
-      "href": "./catalog.json",
+      "rel": "self",
+      "href": "https://data.source.coop/geospatialjeff/oam-portolan/catalog.json",
       "type": "application/json"
     },
     {
-      "rel": "describedby",
-      "href": "./README.md",
-      "type": "text/markdown",
-      "title": "Catalog README"
+      "rel": "root",
+      "href": "./catalog.json",
+      "type": "application/json",
+      "title": "OpenAerialMap (Portolan mirror)"
     },
     {
       "rel": "agents",
       "href": "./AGENTS.md",
       "type": "text/markdown",
-      "title": "Catalog agent guide"
+      "title": "Agent/LLM usage guide"
+    },
+    {
+      "rel": "describedby",
+      "href": "./README.md",
+      "type": "text/markdown",
+      "title": "Human-readable documentation"
+    },
+    {
+      "rel": "child",
+      "href": "./oam-cc-by-4-0/collection.json",
+      "type": "application/json",
+      "title": "OpenAerialMap imagery, CC BY 4.0"
+    },
+    {
+      "rel": "child",
+      "href": "./oam-cc-by-nc-4-0/collection.json",
+      "type": "application/json",
+      "title": "OpenAerialMap imagery, CC BY-NC 4.0"
+    },
+    {
+      "rel": "child",
+      "href": "./oam-cc-by-sa-4-0/collection.json",
+      "type": "application/json",
+      "title": "OpenAerialMap imagery, CC BY-SA 4.0"
     },
     {
       "rel": "vcs",
-      "href": "https://github.com/TODO(setup)",
+      "href": "https://github.com/geospatial-jeff/oam-portolan",
+      "type": "text/html",
       "title": "Source repository"
     },
     {
       "rel": "issues",
-      "href": "https://github.com/TODO(setup)/issues",
+      "href": "https://github.com/geospatial-jeff/oam-portolan/issues",
+      "type": "text/html",
       "title": "Issue tracker"
     }
-  ]
+  ],
+  "title": "OpenAerialMap (Portolan mirror)",
+  "stac_extensions": [
+    "https://schemas.portolan-sdi.org/portolan/v0.2.0/schema.json"
+  ],
+  "updated": "2026-10-06T17:48:03Z"
 }

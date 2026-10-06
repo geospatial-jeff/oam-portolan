@@ -1,0 +1,20 @@
+# Year subcatalog metadata template. `portolan readme` reads only this file for
+# a subcatalog (no inheritance), so license and source are repeated here.
+
+title: "$title"
+description: >-
+  The $count OpenAerialMap scenes licensed $license_name whose acquisition started $when.
+  Items are listed in this catalog's STAC links; query them all at once through the
+  collection's items.parquet, as shown in the collection [AGENTS.md](${human_url}${collection_id}/AGENTS.md).
+
+contact:
+  name: "Jeff"
+  email: "jeff@lgnd.ai"
+
+license: "$license_id"
+license_url: "$license_url"
+
+source_url: "https://imagery.hotosm.org/"
+processing_notes: >-
+  Harvested from the OpenAerialMap STAC API on $harvested_at. See the collection README
+  for the changes made to the upstream item metadata.

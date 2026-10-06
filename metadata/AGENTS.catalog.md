@@ -1,6 +1,6 @@
 # OpenAerialMap (Portolan mirror): agent guide
 
-This is a static STAC mirror of the 21,863 scenes in [OpenAerialMap](https://imagery.hotosm.org/), harvested 2026-10-06T17:48:03Z. The item metadata is local. The imagery stays on OpenAerialMap's S3 bucket as Cloud Optimized GeoTIFFs.
+This is a static STAC mirror of the $total scenes in [OpenAerialMap](https://imagery.hotosm.org/), harvested $harvested_at. The item metadata is local. The imagery stays on OpenAerialMap's S3 bucket as Cloud Optimized GeoTIFFs.
 
 ## Pick a collection by license
 
@@ -8,9 +8,7 @@ OpenAerialMap licenses each image separately, so the catalog has three collectio
 
 | Collection | License | Scenes |
 |---|---|---|
-| `oam-cc-by-4-0` | CC BY 4.0 | 19,336 |
-| `oam-cc-by-nc-4-0` | CC BY-NC 4.0 | 2,039 |
-| `oam-cc-by-sa-4-0` | CC BY-SA 4.0 | 488 |
+$collection_rows
 
 Items with no `license` property inherit CC-BY-4.0 from the upstream collection. They sit in `oam-cc-by-4-0`. Exclude `oam-cc-by-nc-4-0` from anything commercial. CC BY-SA requires derivatives to carry the same license.
 
@@ -20,9 +18,9 @@ Each collection has an `items.parquet` with one row per scene, and an `AGENTS.md
 
 ```sql
 SELECT collection, count(*) AS scenes
-FROM read_parquet(['https://data.source.coop/geospatialjeff/oam-portolan/oam-cc-by-4-0/items.parquet',
-                   'https://data.source.coop/geospatialjeff/oam-portolan/oam-cc-by-sa-4-0/items.parquet',
-                   'https://data.source.coop/geospatialjeff/oam-portolan/oam-cc-by-nc-4-0/items.parquet'], union_by_name = true)
+FROM read_parquet(['${base}oam-cc-by-4-0/items.parquet',
+                   '${base}oam-cc-by-sa-4-0/items.parquet',
+                   '${base}oam-cc-by-nc-4-0/items.parquet'], union_by_name = true)
 GROUP BY collection;
 ```
 

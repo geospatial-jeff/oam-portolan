@@ -33,3 +33,13 @@ __pycache__/
 *.pyc
 .venv/
 .ruff_cache/
+
+# Harvest snapshots and QC scratch (re-fetchable with python -m oam_mirror.harvest)
+data/
+
+# portolan-cli bookkeeping; not part of the spec
+versions.json
+.pytest_cache/
+
+# Full built catalog; its generated part is uploaded by tools/upload_generated.py
+build/

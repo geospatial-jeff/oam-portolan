@@ -1,119 +1,67 @@
-<!-- ops-sync:begin — synced from portolan-sdi/portolan-ops. Edit there, not here. -->
-# Portolan agent norms
+## This repository
 
-These rules apply to AI agents working in any portolan-sdi repo. Every downstream repo repeats this text verbatim as a synced block at the top of its own `AGENTS.md`. Repo-specific instructions live below the block and override the canonical rules in that repo only.
+A git-backed [Portolan](https://www.portolan-sdi.org/) catalog that mirrors the item metadata of [OpenAerialMap](https://imagery.hotosm.org/) (HOT's OAM v2 STAC API). It publishes to [source.coop/geospatialjeff/oam-portolan](https://source.coop/geospatialjeff/oam-portolan). The imagery stays on HOT's `oin-hotosm-temp` bucket, and the catalog points at it.
 
-Claude Code does not read `AGENTS.md`. Each repo has a one-line `CLAUDE.md` that imports it instead. Put repo-specific instructions in `AGENTS.md`, never in `CLAUDE.md`, which the sync overwrites.
+### Two parts: committed and generated
 
-## Ground rules
+`python -m oam_mirror.build` writes the full catalog to `build/site/`, which is gitignored. `python -m oam_mirror.export` then copies the committed part into `catalog/`.
 
-The [portolan-spec](https://github.com/portolan-sdi/portolan-spec) repo is ground truth for the Portolan specification. The CLI, `rashid`, the registry, and every other tool implement the specification. They are downstream of it. Never describe the CLI as the source of truth. Propose spec changes in portolan-spec.
+| Part | What | Tracked | Published by |
+|---|---|---|---|
+| Committed | root `catalog.json`, `AGENTS.md`, `README.md`; per collection `collection.json`, `AGENTS.md`, `README.md`, `thumbnail.png` | yes, in `catalog/` | `tools/publish.py` |
+| Generated | 21,863 item JSONs, 46 year subcatalogs, each collection's `items.parquet` | no, in `build/site/` | `tools/upload_generated.py` |
 
-Before documenting any command, flag, or API, verify it exists in the released tool. A fabricated example persists beyond the session that wrote it.
+The item tree is too large to commit, as the spec's git-backed catalogs guide advises for large item collections. Fields of the World uses the same split. `docs/conformance.md` explains the two scoped gate exemptions this causes in a checkout.
 
-Every repo uses Apache-2.0 except portolan-browser and portolan-nl-demo, which are ISC forks. See [norms/repos.md](https://github.com/portolan-sdi/portolan-ops/blob/main/norms/repos.md) for the record. Never introduce code under another license without a human decision recorded there.
+### The loop
 
-Never bypass pre-commit hooks or CI gates. Green means green.
+```bash
+python -m oam_mirror.harvest data/openaerialmap.ndjson       # refresh from HOT
+python -m oam_mirror.build data/openaerialmap.ndjson build/site
+(cd build/site && portolan check --data-scope local)          # full catalog
+python -m oam_mirror.export build/site catalog --public-url https://data.source.coop/geospatialjeff/oam-portolan/
+python -m oam_mirror.verify_docs build/site --local https://data.source.coop/geospatialjeff/oam-portolan/
+python -m pytest -q tests/unit
+python3 tests/run_all.py                                      # committed catalog gates
+python3 tools/publish.py && python3 tools/upload_generated.py # dry runs
+python3 tools/upload_generated.py --confirm                   # generated tree first
+python3 tools/publish.py --confirm                            # then the collections that link to it
+```
 
-Write commits in conventional form. Squash-merge makes the pull request title become the commit message.
+The build needs portolan-cli 0.8.0 on `PATH` for `init`, `stac-geoparquet` and `readme`. Set `GPIO` to the `gpio` that ships inside the portolan-cli tool environment. Uploads use the `source-coop` AWS profile described in `catalog.publish.yaml`, after `source-coop login`.
 
-## Pull requests and issues
+`--data-scope local` matters. Without it, `portolan check` reads all 21,863 remote COGs. Never run `portolan check --fix` here, because it would download every COG to compute checksums.
 
-Write every issue and pull request in two layers. The human layer first states what is wrong or missing. It explains why the problem matters and what should happen instead. Someone who did not follow your investigation should understand it in about a minute. The agent layer then provides evidence and implementation detail. It also records constraints, edge cases, and verification.
+### Edit the generator, not generated output
 
-There is no word limit. A 700-word issue is good when its first 150 words make the outcome obvious. A 150-word issue is bad when it compresses the meaning into prose the reader has to unpack. Optimize for fast comprehension, not for short tickets.
+Do not hand-edit `catalog/` or `build/site/`. A rebuild overwrites the edit.
 
-Write them in Simplified Technical English (ASD-STE100). The rules are an output style, `.claude/output-styles/simplified-technical-english.md`, which every repo receives. A hook prints it at session start. Sentences run under 20 words and express one idea. Use the active voice, and use only the infinitive, the imperative, and simple tenses. Use a verb rather than a noun made from a verb. Keep the technical content exactly as precise as it was, and simplify only the language around it. Describe the design as it stands now rather than the approaches you discarded.
+- Change prose in `metadata/`. `catalog.yaml`, `collection.yaml` and `year.yaml` feed the descriptions and READMEs. The `AGENTS.*.md` files are the agent-guide templates.
+- Change item handling in `oam_mirror/transform.py`. List every change there in the `processing_notes` of `metadata/collection.yaml`.
+- Change the tree layout in `oam_mirror/layout.py`, and the committed/generated split in `oam_mirror/export.py`.
 
-The structural contract CI enforces on a pull request:
+### Publishing
 
-- The sections `## What changed`, `## Why`, and `## Verification` exist and are not empty.
-- The prose references the issue the change resolves, as `#N` or its URL.
-- Verification pastes the command you ran and its output in a fenced block under `## Verification`. It identifies the data it read, as a URL or catalog path.
-- A change that alters no behavior ticks the waiver checkbox instead. Keep its wording intact because the check matches the phrase "does not alter behavior".
+Publish with `tools/publish.py` and `tools/upload_generated.py`, never `portolan push`. `portolan push` uploads only the files portolan-cli tracks in `versions.json`, and the build deletes those. Neither script deletes. Removing a file locally does not unpublish it.
 
-Good evidence shows the fix works against real data. Proving a command exits zero is not enough. Take the failing command from the issue, run it against the same catalog, and show it now succeeds. A wall of pytest output does not count.
-
-Issues follow the same shape. A bug report shows the failure and identifies the data. Write a feature request to show what the current tool cannot do, or what the workaround costs. A task states the outcome and the command that proves it is done.
-
-Each repo uses the org issue template. The language itself is checked before a body is ever filed: `.claude/hooks/writing_check.py` runs on `gh issue create` and `gh pr create`, and reports the specific problems it found. Run `writing_check.py --print-rules` to read the rules. When it is wrong about a line, say so in the body with `<!-- ste-ok: RULE_ID why this is correct -->`. Dependabot is exempt from the CI check.
-
-That check matches words and punctuation, but cannot assess tone or padding. It also cannot assess prose that argues for its own value. Passing proves nothing about how the body reads. Read what you wrote before you file it. Cut sentences that only make the change sound good.
-
-## Documentation
-
-Agents writing or restructuring documentation follow two exemplars named in [norms/docs.md](https://github.com/portolan-sdi/portolan-ops/blob/main/norms/docs.md). [obstore](https://github.com/developmentseed/obstore) demonstrates a concise, human-readable README that delegates to good docs elsewhere. [scaffold-docs-skill](https://github.com/dbreunig/scaffold-docs-skill) shows how to build docs that have a clear human-facing surface, maintain examples via tests so they never drift, and auto-generate API docs instead of duplicating them. Both make documentation easy to maintain and easy to update. Draft top-down with human review between layers. Do not draft a README from a generic template or from memory.
-
-These rules apply to every docs change. Use sentence-case headings without emoji. Use absolute dates like "in July 2026", never "recently". Run every command example against the released tool before you publish it.
-
-## Voice and messaging
-
-Every written artifact follows the prose rules in [norms/prose.md](https://github.com/portolan-sdi/portolan-ops/blob/main/norms/prose.md). Vale checks Markdown and website copy. The writing hook checks the prose in issues and pull requests. Apply the rules while drafting, not as cleanup.
-
-Before drafting substantial public copy like a README, a docs page, or an announcement, fetch and read [norms/prose.md](https://github.com/portolan-sdi/portolan-ops/blob/main/norms/prose.md) and [copy/messaging.md](https://github.com/portolan-sdi/portolan-ops/blob/main/copy/messaging.md) in full. If you cannot fetch them, say so and stop. Write from the actual files, not from memory.
-
-How Portolan is described comes from [copy/messaging.md](https://github.com/portolan-sdi/portolan-ops/blob/main/copy/messaging.md) alone.
-
-## Org-wide facts
-
-The canonical homepage is https://www.portolan-sdi.org/. Canonical URLs live in [copy/urls.md](https://github.com/portolan-sdi/portolan-ops/blob/main/copy/urls.md). Do not hardcode variants.
-
-Community discussion happens in the [Portolan Google Group](https://groups.google.com/g/portolan) and the [Portolan channel](https://cloudnativegeo.slack.com/archives/C0A1JBH9529) in Cloud-Native Geo Slack. Planning happens in [org-level GitHub projects](https://github.com/orgs/portolan-sdi/projects/1).
-
-## Contribution rules
-
-The [AI policy](https://github.com/portolan-sdi/portolan-ops/blob/main/policies/AI_POLICY.md) applies to every contribution. An agent may draft the diff and the pull request body. A human must read, understand, and approve both before review is requested. Agents never open PRs, post comments, or take action in shared spaces without human approval.
-
-Follow the [contributing guide](https://github.com/portolan-sdi/portolan-ops/blob/main/policies/CONTRIBUTING.md) and the [code of conduct](https://github.com/portolan-sdi/portolan-ops/blob/main/policies/CODE_OF_CONDUCT.md).
-
-## Sync discipline
-
-Files between `ops-sync` markers are synced from [portolan-ops](https://github.com/portolan-sdi/portolan-ops). They are overwritten on every sync run. To change one, edit it in portolan-ops, never in place.
-
-One canonical home per fact. If a value like a color, URL, or policy line exists in portolan-ops, link to it rather than copying it.
-<!-- ops-sync:end -->
-
-## This Repository
-
-A template for a git-backed Portolan catalog. Repositories created from it
-inherit everything here, so a mistake in this file propagates.
-
-### The publish boundary
-
-`catalog/` is the published catalog. Everything in it is published, and
-nothing outside it ever is. Do not move a file into `catalog/` to make it
-publish, and do not add a path outside `publish_dir` to `tools/publish.py`.
-The boundary is the only thing standing between a scratch file and a public
-bucket, and it holds because it is structural rather than a list of
-exclusions.
+The root `self` link is written into the committed `catalog.json` from `--public-url`. The skill allows this. The spec guide prefers a publish-step rewrite. Change `REPO_URL` and `DEFAULT_PUBLIC_URL` in `oam_mirror/build.py` together with `catalog.publish.yaml` if the catalog moves.
 
 ### Data never enters git
 
-Never commit a GeoParquet, COG, PMTiles, Zarr, or COPC file. If a gate needs
-bytes to check, generate them in CI. Git keeps every version of a binary
-forever and deleting it later reclaims nothing.
+Never commit a GeoParquet, COG, PMTiles, Zarr or COPC file. `items.parquet` is generated and uploaded. The committed collections reference it by its published URL.
 
 ### The conformance allow-list
 
-`ACCEPTED` in `tests/test_conformance.py` ships empty. Never add an entry
-without a matching row in `docs/conformance.md` giving the rule, where it
-fires, why it is accepted, and the issue tracking its removal.
+`ACCEPTED` in `tests/test_conformance.py` ships empty. Never add an entry without a matching row in `docs/conformance.md` giving the rule, where it fires, why it is accepted, and the issue tracking its removal. The generated-tree exemptions are matched by file and target, not by rule id. Keep them that narrow.
 
 ### Published agent guides
 
-Every claim in a `catalog/**/AGENTS.md` is either quoted from a source or
-measured from the data. An invented join key or column name produces a
-confident wrong answer that nothing downstream catches.
+Every claim in a published `AGENTS.md` is either quoted from a source or measured from the data. Every SQL recipe must run. `python -m oam_mirror.verify_docs` executes them.
+
+### Personal data
+
+Upstream items carry uploader email addresses. `oam_mirror/transform.py` removes them, and nothing published may contain one. Check for them after any transform change.
 
 ### The links back to this repository
 
-`catalog/catalog.json` ships a `vcs` link and an `issues` link. Both hrefs are
-setup placeholders, so `tests/test_setup.py` catches a half-edited repository.
-The Portolan spec recommends these two links for a git-backed catalog. See
-[git-backed catalogs](https://github.com/portolan-sdi/portolan-spec/blob/main/specs/best-practices/git-backed-catalogs.md),
-which merged in August 2026.
-
-Keep both hrefs absolute. The repository sits outside the published catalog,
-so a relative href resolves against the public base URL. Each placeholder
-holds a `://`, because `tests/test_links.py` treats an href without one as a
-path and looks for it on disk.
+The build writes the root `vcs` and `issues` links from `REPO_URL`. Keep both absolute, because the repository sits outside the published catalog.

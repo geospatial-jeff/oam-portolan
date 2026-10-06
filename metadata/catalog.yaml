@@ -1,0 +1,32 @@
+# Root catalog metadata. The build copies this to catalog/.portolan/metadata.yaml
+# and sets the root catalog.json title and description from it.
+
+title: "OpenAerialMap (Portolan mirror)"
+description: >-
+  A static, cloud-native mirror of the 21,863 scenes in [OpenAerialMap](https://imagery.hotosm.org/),
+  the open satellite, aircraft and drone imagery service run by the
+  [Humanitarian OpenStreetMap Team](https://www.hotosm.org/). Every scene is a STAC item
+  that points at its Cloud Optimized GeoTIFF on OpenAerialMap's own storage, so no imagery
+  is copied. Scenes are split into three collections by license, because OpenAerialMap
+  licenses each image separately: CC BY 4.0, CC BY-SA 4.0 and CC BY-NC 4.0. Each collection
+  publishes an items.parquet index for searching every scene in one read. Agents start at
+  [AGENTS.md](${human_url}AGENTS.md).
+
+contact:
+  name: "Jeff"
+  email: "jeff@lgnd.ai"
+
+# The catalog mixes three licenses; each collection declares its own SPDX id.
+# The FAQ is where OpenAerialMap states that each image has its own license.
+license: "other"
+license_url: "https://docs.imagery.hotosm.org/about/faq/"
+
+keywords: ["OpenAerialMap", "aerial imagery", "drone", "UAV", "satellite", "orthomosaic", "humanitarian", "HOT"]
+attribution: "Imagery © OpenAerialMap contributors. See each scene's providers for the producer to credit."
+
+source_url: "https://imagery.hotosm.org/"
+processing_notes: >-
+  Item metadata harvested from the OpenAerialMap STAC API
+  (https://api.imagery.hotosm.org/stac, collection openaerialmap) on $harvested_at.
+  Imagery is referenced in place on OpenAerialMap's S3 bucket and is not copied.
+  Each collection's README lists the changes made to the upstream item metadata.

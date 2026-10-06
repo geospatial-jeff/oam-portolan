@@ -10,10 +10,18 @@ git. Set CI_LIGHT=1 there. It exempts asset hrefs with a data suffix, and
 nothing else. Every structural link still resolves. Leave CI_LIGHT unset
 locally, where the bytes are on disk, and the gate checks every href.
 
+One documented exemption: the generated year tree. The 21,863 items and
+their year subcatalogs are written to object storage by
+tools/upload_generated.py and never committed (see docs/conformance.md), so
+each collection's relative `child` links to `./<year>/catalog.json` resolve in
+the published catalog but not in a checkout. Exactly those links are counted
+and reported rather than resolved.
+
 Run: python3 tests/test_links.py
 """
 import json
 import os
+import re
 import sys
 from pathlib import Path
 
@@ -27,6 +35,21 @@ BASE = ROOT / config["publish_dir"]
 
 errors: list[str] = []
 skipped = 0
+generated = 0
+
+# catalog/oam-*/collection.json -> ./<year>/catalog.json (generated to the bucket)
+GENERATED_PARENT = re.compile(r"^oam-cc-by(-sa|-nc)?-4-0/collection\.json$")
+GENERATED_CHILD = re.compile(r"^\./(\d{4}|pre-2010)/catalog\.json$")
+
+
+def is_generated_child(path: Path, link: dict) -> bool:
+    """True for a collection's child link into the generated year tree."""
+    rel = path.relative_to(BASE).as_posix()
+    return (
+        link.get("rel") == "child"
+        and bool(GENERATED_PARENT.match(rel))
+        and bool(GENERATED_CHILD.match(link.get("href", "")))
+    )
 
 CI_LIGHT = os.environ.get("CI_LIGHT") == "1"
 # The exemption reads the suffix and nothing else. A directory rule or a path
@@ -77,6 +100,9 @@ for path in documents:
         href = link.get("href", "")
         if not href or is_remote(href):
             continue
+        if is_generated_child(path, link):
+            generated += 1
+            continue
         checked += 1
         if not (path.parent / href).resolve().exists():
             errors.append(
@@ -105,4 +131,7 @@ if errors:
     print("\n".join(f"error  {e}" for e in errors))
     raise SystemExit(1)
 
-print(f"OK: {checked} relative href(s) across {len(documents)} object(s)")
+print(
+    f"OK: {checked} relative href(s) across {len(documents)} object(s) "
+    f"({generated} child link(s) into the generated year tree exempted)"
+)

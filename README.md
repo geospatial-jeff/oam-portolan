@@ -1,92 +1,30 @@
-# Portolan Catalog Template
+# oam-portolan
 
-A starting point for a [Portolan](https://www.portolan-sdi.org/) catalog whose
-metadata lives in git. Click **Use this template**, work through
-[SETUP.md](SETUP.md), and you have a repository whose CI validates every change
-before it publishes.
+A [Portolan](https://www.portolan-sdi.org/) catalog of [OpenAerialMap](https://imagery.hotosm.org/), the open drone, aircraft and satellite imagery service run by the [Humanitarian OpenStreetMap Team](https://www.hotosm.org/).
 
-**`catalog/` is the published catalog.** Everything in it is published.
-Everything outside it never is. That boundary is the whole publish contract,
-and `tools/publish.py` has no flag or config key that widens it.
+- **Published:** [source.coop/geospatialjeff/oam-portolan](https://source.coop/geospatialjeff/oam-portolan) ([catalog.json](https://data.source.coop/geospatialjeff/oam-portolan/catalog.json))
+- **Browse:** [Portolan Browser](https://browser.portolan-sdi.org/#/external/data.source.coop/geospatialjeff/oam-portolan/catalog.json)
 
-## Three kinds of file
+The catalog mirrors the metadata of every scene in HOT's OAM v2 STAC API (21,863 scenes on 2026-10-06). The imagery stays where HOT hosts it, as Cloud Optimized GeoTIFFs in `s3://oin-hotosm-temp` (us-east-1). Scenes are split into three collections by license (CC BY 4.0, CC BY-SA 4.0, CC BY-NC 4.0) and grouped by acquisition year. Each collection has an `items.parquet` for searching every scene in one query.
 
-| Kind | Where | Example |
-|---|---|---|
-| Tracked and published | inside `catalog/` | STAC JSON, `README.md`, `AGENTS.md`, thumbnails, logos |
-| Tracked, never published | outside `catalog/` | `tools/`, `tests/`, `docs/`, this README, `catalog.publish.yaml` |
-| Neither | gitignored | GeoParquet, COGs, PMTiles, credentials |
+The mirror removes uploader email addresses and fixes a few STAC validity problems in the upstream metadata. Each collection's README lists every change.
 
-The data lives in object storage next to the published metadata. The
-repository references it by URL and never stores it.
+## How this repository works
 
-## Layout
+The build writes the whole catalog to `build/site/`. Only the root and the three collections are committed in `catalog/`. The 21,863 items, their year subcatalogs and the `items.parquet` indexes are generated and uploaded without passing through git, the way the [git-backed catalogs guide](https://github.com/portolan-sdi/portolan-spec/blob/main/specs/best-practices/git-backed-catalogs.md) recommends for large item collections.
 
 | Path | What it is |
 |---|---|
-| `catalog/` | The published tree, synced 1:1 to object storage |
-| `catalog.publish.yaml` | Where it publishes, and under what public URL |
-| `tools/publish.py` | The sync. Dry run by default |
-| `tools/upload_data.py` | The data upload. Dry run by default |
-| `tests/` | The gates CI runs on every pull request |
-| `docs/conformance.md` | Any validator finding this catalog accepts, and why |
-| `SETUP.md` | The checklist. Delete it when you are done |
+| `oam_mirror/` | Harvest, transform, layout, build, export, doc check, local server |
+| `metadata/` | Hand-written descriptions, metadata and `AGENTS.md` templates |
+| `catalog/` | The committed part of the catalog: root and collections |
+| `tools/publish.py` | Sync `catalog/` to Source Cooperative. Dry run by default |
+| `tools/upload_generated.py` | Upload the generated items, year catalogs and `items.parquet`. Dry run by default |
+| `tests/run_all.py` | Catalog gates: links, STAC validity, Portolan conformance |
+| `tests/unit/` | Generator unit tests |
 
-## Publish
+[AGENTS.md](AGENTS.md) has the rebuild and publish loop, and [docs/conformance.md](docs/conformance.md) explains the two validator exemptions the generated tree causes in a checkout.
 
-```bash
-python3 tools/publish.py            # dry run: what would change
-python3 tools/publish.py --confirm  # upload; needs AWS credentials
-```
+## Reporting a problem
 
-It never deletes. Removing a file from `catalog/` does not unpublish it, so
-delete the object yourself if that is what you meant.
-
-## Upload the data
-
-The data is too large for git, so it lives outside `catalog/`.
-`tools/upload_data.py` carries it to the same bucket prefix. Set `data_dir` in
-`catalog.publish.yaml` to the directory that holds it.
-
-```bash
-python3 tools/upload_data.py            # dry run: what would change
-python3 tools/upload_data.py --confirm  # upload; needs AWS credentials
-```
-
-Both scripts share one set of rules. `upload_data.py` imports the sentinel
-guard, the content types, the change detection, and the upload pool from
-`publish.py`. It changes one thing, the directory it walks. Only the suffixes
-in its allow-list upload, so staged scratch files stay out of the bucket.
-
-## Test
-
-```bash
-python3 tests/run_all.py
-```
-
-| Gate | What it checks |
-|---|---|
-| `test_setup.py` | Template placeholders are all edited, or all untouched |
-| `test_links.py` | Every relative link and asset href resolves |
-| `test_publish.py` | Nothing outside `catalog/` can be uploaded |
-| `test_upload_data.py` | Only staged files with an allowed suffix upload |
-| `test_stac_valid.py` | Valid STAC 1.1.0, via `stac-check` |
-| `test_conformance.py` | Portolan conformance, via `rashid` |
-
-The two validator gates skip when their tools are absent, so a clean checkout
-runs with no setup. CI installs both and enforces them.
-
-## What this template does not decide
-
-How a published catalog points back at the repository that maintains it. Three
-encodings are in use across real catalogs and none is standardized, so this
-template ships none of them rather than freezing one in by default. The
-tradeoffs are in
-[portolan-spec#145](https://github.com/portolan-sdi/portolan-spec/issues/145)
-and in the
-[git-backed catalogs guidance](https://github.com/portolan-sdi/portolan-spec/blob/main/specs/best-practices/git-backed-catalogs.md).
-
-## License
-
-Apache-2.0, covering the tooling in this repository. The data you catalog
-carries its own license, which belongs in `catalog/README.md`.
+Open an [issue](https://github.com/geospatial-jeff/oam-portolan/issues). Problems with the imagery itself, or with the upstream metadata, belong to [HOT's OpenAerialMap](https://github.com/hotosm/openaerialmap/issues).

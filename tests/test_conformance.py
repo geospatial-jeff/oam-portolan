@@ -9,6 +9,13 @@ it is accepted, and the issue tracking its removal. A known deviation with an
 issue number is a debt. A silently widened allow-list is a lie about what this
 catalog conforms to.
 
+One finding pair is exempted by shape, not by rule id: the generated year tree.
+Items and year subcatalogs are generated to the bucket and never committed
+(docs/conformance.md), so a checkout shows each collection with child links to
+absent year catalogs (PTL-LNK-006) and an item mirror but no items
+(PTL-COL-005). Both are scoped to the three collection documents, and the link
+case to year-catalog targets, so the same rules still fail anywhere else.
+
 Runs with --no-data. The byte checks read every asset, which over remote hrefs
 makes CI slow and dependent on a third-party host being up. Run the full check
 yourself before publishing:
@@ -35,17 +42,31 @@ from publish import load_config  # noqa: E402
 
 ACCEPTED: set[str] = set()
 
+GENERATED_PARENT = re.compile(r"^oam-cc-by(-sa|-nc)?-4-0/collection\.json$")
+GENERATED_CHILD = re.compile(r"^\./(\d{4}|pre-2010)/catalog\.json$")
+
+
+def is_generated_tree_finding(finding: dict) -> bool:
+    """True only for the two documented findings the uncommitted year tree causes."""
+    path = str(finding.get("path", "")).replace("\\", "/")
+    if not GENERATED_PARENT.match(path):
+        return False
+    if finding.get("rule_id") == "PTL-LNK-006":
+        return bool(GENERATED_CHILD.match(str(finding.get("actual", ""))))
+    return finding.get("rule_id") == "PTL-COL-005"
+
 config = load_config()
 target = ROOT / config["publish_dir"]
 
-# The floor comes from portolan-cli/pyproject.toml:54. Rules PTL-LNK-007,
-# PTL-LNK-008, PTL-LNK-009 and PTL-AST-006 do not exist below rashid 0.1.5.
+# rashid 0.1.8 is the first release that accepts the v0.2.0 root self link
+# this catalog carries (PORTO-CORE-081). Rules PTL-LNK-007, PTL-LNK-008,
+# PTL-LNK-009 and PTL-AST-006 do not exist below rashid 0.1.5.
 # This gate asserts all four. A rashid below the floor reports a pass for a
 # catalog that it never checked against those four rules. The upper bound stops
 # an unreviewed 0.2 rule set from changing what this gate means.
-MIN_VERSION = (0, 1, 5)
+MIN_VERSION = (0, 1, 8)
 MAX_VERSION = (0, 2, 0)
-SPEC = "rashid>=0.1.5,<0.2.0"
+SPEC = "rashid>=0.1.8,<0.2.0"
 INSTALL = f"python -m pip install '{SPEC}'"
 
 
@@ -100,7 +121,9 @@ except json.JSONDecodeError:
 findings = report.get("findings", [])
 blocking = [
     f for f in findings
-    if f.get("severity") == "error" and f.get("rule_id") not in ACCEPTED
+    if f.get("severity") == "error"
+    and f.get("rule_id") not in ACCEPTED
+    and not is_generated_tree_finding(f)
 ]
 
 for finding in blocking:
@@ -112,6 +135,9 @@ for finding in blocking:
 waived = [f for f in findings if f.get("rule_id") in ACCEPTED]
 if waived:
     print(f"\n{len(waived)} accepted finding(s); see docs/conformance.md")
+generated = [f for f in findings if is_generated_tree_finding(f)]
+if generated:
+    print(f"{len(generated)} finding(s) from the uncommitted year tree; see docs/conformance.md")
 
 if blocking:
     raise SystemExit(1)

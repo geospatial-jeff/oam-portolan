@@ -1,0 +1,232 @@
+{
+  "type": "Collection",
+  "stac_version": "1.1.0",
+  "stac_extensions": [
+    "https://schemas.portolan-sdi.org/portolan/v0.2.0/schema.json",
+    "https://stac-extensions.github.io/file/v2.1.0/schema.json"
+  ],
+  "id": "oam-cc-by-sa-4-0",
+  "title": "OpenAerialMap imagery, CC BY-SA 4.0",
+  "description": "The 488 OpenAerialMap scenes licensed [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/), mirrored from the [OpenAerialMap STAC API](https://api.imagery.hotosm.org/stac/collections/openaerialmap) on 2026-10-06. Scenes come from drones (375), aircraft (85) and satellites (28), uploaded since 2015 by individuals, mapping communities, governments and companies. Each scene is one STAC item whose Cloud Optimized GeoTIFF stays on OpenAerialMap's storage; items are grouped into one subcatalog per acquisition year. Search every scene at once through items.parquet. Each item names its own producer, who is the party to credit. Agents start at [AGENTS.md](https://source.coop/geospatialjeff/oam-portolan/oam-cc-by-sa-4-0/AGENTS.md).",
+  "license": "CC-BY-SA-4.0",
+  "keywords": [
+    "OpenAerialMap",
+    "aerial imagery",
+    "drone",
+    "UAV",
+    "satellite",
+    "orthomosaic",
+    "humanitarian"
+  ],
+  "providers": [
+    {
+      "name": "OpenAerialMap contributors",
+      "roles": [
+        "producer",
+        "licensor"
+      ],
+      "url": "https://imagery.hotosm.org/",
+      "description": "The people and organisations who upload imagery. Each item names its producer in properties.providers."
+    },
+    {
+      "name": "Humanitarian OpenStreetMap Team (HOT)",
+      "roles": [
+        "processor"
+      ],
+      "url": "https://www.hotosm.org/",
+      "description": "Runs OpenAerialMap, converts uploads to Cloud Optimized GeoTIFF, hosts the imagery and publishes the STAC API."
+    },
+    {
+      "name": "Jeff",
+      "roles": [
+        "host"
+      ],
+      "url": "https://source.coop/geospatialjeff/oam-portolan",
+      "email": "jeff@lgnd.ai",
+      "description": "Maintains this static Portolan mirror of the item metadata."
+    }
+  ],
+  "extent": {
+    "spatial": {
+      "bbox": [
+        [
+          -123.237155,
+          -35.700302,
+          147.428741,
+          57.879539
+        ]
+      ]
+    },
+    "temporal": {
+      "interval": [
+        [
+          "2013-12-31T16:00:00Z",
+          "2026-09-11T00:00:00Z"
+        ]
+      ]
+    }
+  },
+  "summaries": {
+    "oam:platform_type": [
+      "aircraft",
+      "satellite",
+      "uav"
+    ],
+    "gsd": {
+      "minimum": 0.005000000000000716,
+      "maximum": 30
+    }
+  },
+  "item_assets": {
+    "visual": {
+      "type": "image/tiff; application=geotiff; profile=cloud-optimized",
+      "roles": [
+        "data"
+      ],
+      "title": "Imagery (Cloud Optimized GeoTIFF)"
+    },
+    "thumbnail": {
+      "type": "image/png",
+      "roles": [
+        "thumbnail"
+      ],
+      "title": "Thumbnail"
+    },
+    "metadata": {
+      "type": "application/json",
+      "roles": [
+        "metadata"
+      ],
+      "title": "OpenAerialMap upload metadata"
+    }
+  },
+  "updated": "2026-10-06T17:48:03Z",
+  "links": [
+    {
+      "rel": "root",
+      "href": "../catalog.json",
+      "type": "application/json"
+    },
+    {
+      "rel": "parent",
+      "href": "../catalog.json",
+      "type": "application/json"
+    },
+    {
+      "rel": "agents",
+      "href": "./AGENTS.md",
+      "type": "text/markdown",
+      "title": "Agent/LLM usage guide"
+    },
+    {
+      "rel": "describedby",
+      "href": "./README.md",
+      "type": "text/markdown",
+      "title": "Human-readable documentation"
+    },
+    {
+      "rel": "license",
+      "href": "https://creativecommons.org/licenses/by-sa/4.0/",
+      "type": "text/html",
+      "title": "CC BY-SA 4.0 license"
+    },
+    {
+      "rel": "via",
+      "href": "https://imagery.hotosm.org/",
+      "type": "text/html",
+      "title": "OpenAerialMap"
+    },
+    {
+      "rel": "canonical",
+      "href": "https://api.imagery.hotosm.org/stac/collections/openaerialmap",
+      "type": "application/json",
+      "title": "OpenAerialMap STAC collection"
+    },
+    {
+      "rel": "child",
+      "href": "./2013/catalog.json",
+      "type": "application/json",
+      "title": "OpenAerialMap imagery, CC BY-SA 4.0, acquired in 2013"
+    },
+    {
+      "rel": "child",
+      "href": "./2017/catalog.json",
+      "type": "application/json",
+      "title": "OpenAerialMap imagery, CC BY-SA 4.0, acquired in 2017"
+    },
+    {
+      "rel": "child",
+      "href": "./2018/catalog.json",
+      "type": "application/json",
+      "title": "OpenAerialMap imagery, CC BY-SA 4.0, acquired in 2018"
+    },
+    {
+      "rel": "child",
+      "href": "./2019/catalog.json",
+      "type": "application/json",
+      "title": "OpenAerialMap imagery, CC BY-SA 4.0, acquired in 2019"
+    },
+    {
+      "rel": "child",
+      "href": "./2020/catalog.json",
+      "type": "application/json",
+      "title": "OpenAerialMap imagery, CC BY-SA 4.0, acquired in 2020"
+    },
+    {
+      "rel": "child",
+      "href": "./2021/catalog.json",
+      "type": "application/json",
+      "title": "OpenAerialMap imagery, CC BY-SA 4.0, acquired in 2021"
+    },
+    {
+      "rel": "child",
+      "href": "./2022/catalog.json",
+      "type": "application/json",
+      "title": "OpenAerialMap imagery, CC BY-SA 4.0, acquired in 2022"
+    },
+    {
+      "rel": "child",
+      "href": "./2023/catalog.json",
+      "type": "application/json",
+      "title": "OpenAerialMap imagery, CC BY-SA 4.0, acquired in 2023"
+    },
+    {
+      "rel": "child",
+      "href": "./2024/catalog.json",
+      "type": "application/json",
+      "title": "OpenAerialMap imagery, CC BY-SA 4.0, acquired in 2024"
+    },
+    {
+      "rel": "child",
+      "href": "./2025/catalog.json",
+      "type": "application/json",
+      "title": "OpenAerialMap imagery, CC BY-SA 4.0, acquired in 2025"
+    },
+    {
+      "rel": "child",
+      "href": "./2026/catalog.json",
+      "type": "application/json",
+      "title": "OpenAerialMap imagery, CC BY-SA 4.0, acquired in 2026"
+    }
+  ],
+  "assets": {
+    "geoparquet-items": {
+      "href": "https://data.source.coop/geospatialjeff/oam-portolan/oam-cc-by-sa-4-0/items.parquet",
+      "type": "application/vnd.apache.parquet",
+      "title": "STAC items as GeoParquet",
+      "roles": [
+        "collection-mirror"
+      ],
+      "file:size": 303639,
+      "file:checksum": "1220bf66e85cfb5c21a596c908ae4711def864e8b0f4880a6e910ef40ed6cd8c3286"
+    },
+    "thumbnail": {
+      "href": "./thumbnail.png",
+      "type": "image/png",
+      "roles": [
+        "thumbnail"
+      ],
+      "title": "Scene locations (centre of each footprint) over Natural Earth land"
+    }
+  }
+}

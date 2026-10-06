@@ -1,0 +1,65 @@
+# Collection metadata template, rendered once per license with string.Template.
+# The build writes it to catalog/<collection>/.portolan/metadata.yaml and copies
+# description and providers into collection.json, so README and STAC agree.
+
+title: "$title"
+description: >-
+  The $count OpenAerialMap scenes licensed [$license_name]($license_url), mirrored from the
+  [OpenAerialMap STAC API](https://api.imagery.hotosm.org/stac/collections/openaerialmap) on
+  $harvested_date. Scenes come from $platforms, uploaded since 2015 by individuals, mapping
+  communities, governments and companies. Each scene is one STAC item whose Cloud Optimized
+  GeoTIFF stays on OpenAerialMap's storage; items are grouped into one subcatalog per
+  acquisition year. Search every scene at once through items.parquet. Each item names its own
+  producer, who is the party to credit. Agents start at [AGENTS.md](${human_url}${collection_id}/AGENTS.md).
+
+contact:
+  name: "Jeff"
+  email: "jeff@lgnd.ai"
+
+license: "$license_id"
+license_url: "$license_url"
+
+providers:
+  - name: "OpenAerialMap contributors"
+    roles: ["producer", "licensor"]
+    url: "https://imagery.hotosm.org/"
+    description: "The people and organisations who upload imagery. Each item names its producer in properties.providers."
+  - name: "Humanitarian OpenStreetMap Team (HOT)"
+    roles: ["processor"]
+    url: "https://www.hotosm.org/"
+    description: "Runs OpenAerialMap, converts uploads to Cloud Optimized GeoTIFF, hosts the imagery and publishes the STAC API."
+  - name: "Jeff"
+    roles: ["host"]
+    url: "https://source.coop/geospatialjeff/oam-portolan"
+    email: "jeff@lgnd.ai"
+    description: "Maintains this static Portolan mirror of the item metadata."
+
+keywords: ["OpenAerialMap", "aerial imagery", "drone", "UAV", "satellite", "orthomosaic", "humanitarian", "HOT"]
+attribution: "Imagery © the producer named in each scene's providers, via OpenAerialMap. Licensed $license_name."
+
+source_url: "https://imagery.hotosm.org/"
+processing_notes: >-
+  Harvested on $harvested_at from the OpenAerialMap STAC API search endpoint
+  (https://api.imagery.hotosm.org/stac/search, collection openaerialmap), paged in
+  parallel by acquisition year and deduplicated by item id; the harvest matched the
+  21,863 items reported by OpenAerialMap's stats.json. Items were assigned to this
+  collection by their license property; items with no license inherit CC-BY-4.0
+  from the upstream collection. Changes to the upstream item metadata:
+  (1) email addresses removed from oam:uploader_email, provider descriptions and
+  provider names, replaced with "$withheld" where the email was the whole name;
+  (2) "datetime": null added to items that give only start_datetime and end_datetime,
+  as STAC 1.1 requires the key; (3) one bbox with south and north swapped recomputed
+  from its geometry; (4) http asset links rewritten to https on the same S3 object;
+  (5) the unmodified upload asset ("original") given the source role instead of data;
+  (6) structural links rewritten as relative links, with a canonical link to the
+  upstream item. Imagery bytes are not copied or altered. The thumbnail plots scene
+  centres over Natural Earth 1:110m land. items.parquet is generated with
+  portolan stac-geoparquet, then Hilbert-sorted with gpio sort hilbert in 2,048-row groups.
+
+known_issues: |
+  - This is a snapshot taken $harvested_at. OpenAerialMap adds roughly 100 scenes a month; check the upstream STAC API for newer scenes.
+  - The gsd property is not reliable for every scene. $degree_gsd_summary $gsd_note Filter on gsd with care.
+  - $dates_note $wide_scenes scenes have bounding boxes wider than 20 degrees, which inflates the collection extent.
+  - Older COGs have no mask. In a random sample of 40 scenes, 16 had no internal mask and 5 had no embedded band statistics. Render older scenes with nodata=0 to hide black borders.
+  - file:checksum is published upstream only for recent uploads, and file:size only for the COG. This mirror does not compute missing values for bytes it does not host.
+  - OpenAerialMap's bucket answers simple GET requests with Access-Control-Allow-Origin: *, but on 2026-10-06 it rejected a CORS preflight that asked to send a Range header (HTTP 403). Browser clients whose range reads need a preflight cannot read the COGs directly; server-side readers such as GDAL are unaffected.
