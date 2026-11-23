@@ -52,8 +52,10 @@ processing_notes: >-
   from its geometry; (4) http asset links rewritten to https on the same S3 object;
   (5) the unmodified upload asset ("original") given the source role instead of data;
   (6) structural links rewritten as relative links, with a canonical link to the
-  upstream item. Imagery bytes are not copied or altered. The thumbnail plots scene
-  centres over Natural Earth 1:110m land. items.parquet is generated with
+  upstream item; (7) integer proj:code values on tile archive assets written as
+  "EPSG:<code>" strings, as Projection v2.0.0 requires; (8) PMTiles assets given
+  the visual role in addition to tiles. Imagery bytes are not copied or altered.
+  The thumbnail plots scene centres over Natural Earth 1:110m land. items.parquet is generated with
   portolan stac-geoparquet, then Hilbert-sorted with gpio sort hilbert in 2,048-row groups.
 
 known_issues: |

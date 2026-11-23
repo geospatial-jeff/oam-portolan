@@ -9,12 +9,13 @@ it is accepted, and the issue tracking its removal. A known deviation with an
 issue number is a debt. A silently widened allow-list is a lie about what this
 catalog conforms to.
 
-One finding pair is exempted by shape, not by rule id: the generated year tree.
+Three findings are exempted by shape, not by rule id: the generated year tree.
 Items and year subcatalogs are generated to the bucket and never committed
 (docs/conformance.md), so a checkout shows each collection with child links to
-absent year catalogs (PTL-LNK-006) and an item mirror but no items
-(PTL-COL-005). Both are scoped to the three collection documents, and the link
-case to year-catalog targets, so the same rules still fail anywhere else.
+absent year catalogs (PTL-LNK-006), an item mirror but no items (PTL-COL-005),
+and no data asset, because the COGs are item assets (PTL-AST-007). All three
+are scoped to the three collection documents, and the link case to year-catalog
+targets, so the same rules still fail anywhere else.
 
 Runs with --no-data. The byte checks read every asset, which over remote hrefs
 makes CI slow and dependent on a third-party host being up. Run the full check
@@ -47,26 +48,24 @@ GENERATED_CHILD = re.compile(r"^\./(\d{4}|pre-2010)/catalog\.json$")
 
 
 def is_generated_tree_finding(finding: dict) -> bool:
-    """True only for the two documented findings the uncommitted year tree causes."""
+    """True only for the three documented findings the uncommitted year tree causes."""
     path = str(finding.get("path", "")).replace("\\", "/")
     if not GENERATED_PARENT.match(path):
         return False
     if finding.get("rule_id") == "PTL-LNK-006":
         return bool(GENERATED_CHILD.match(str(finding.get("actual", ""))))
-    return finding.get("rule_id") == "PTL-COL-005"
+    return finding.get("rule_id") in {"PTL-COL-005", "PTL-AST-007"}
 
 config = load_config()
 target = ROOT / config["publish_dir"]
 
-# rashid 0.1.8 is the first release that accepts the v0.2.0 root self link
-# this catalog carries (PORTO-CORE-081). Rules PTL-LNK-007, PTL-LNK-008,
-# PTL-LNK-009 and PTL-AST-006 do not exist below rashid 0.1.5.
-# This gate asserts all four. A rashid below the floor reports a pass for a
-# catalog that it never checked against those four rules. The upper bound stops
-# an unreviewed 0.2 rule set from changing what this gate means.
-MIN_VERSION = (0, 1, 8)
-MAX_VERSION = (0, 2, 0)
-SPEC = "rashid>=0.1.8,<0.2.0"
+# rashid 0.4.0 is the first release that bundles the Portolan v0.3.0 profile
+# this catalog declares. An older rashid applies v0.2.0 rules and reports a
+# pass for a catalog that it never checked against v0.3.0. The upper bound stops
+# an unreviewed 0.5 rule set from changing what this gate means.
+MIN_VERSION = (0, 4, 0)
+MAX_VERSION = (0, 5, 0)
+SPEC = "rashid>=0.4.0,<0.5.0"
 INSTALL = f"python -m pip install '{SPEC}'"
 
 
