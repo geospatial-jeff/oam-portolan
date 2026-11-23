@@ -41,7 +41,7 @@ def test_year_catalog_parent_is_collection():
 
 def test_year_catalog_declares_portolan_schema():
     catalog = year_catalog("oam-cc-by-4-0", "CC-BY-4.0", "2016", [item("a", "2016-01-01T00:00:00Z")], AGENTS_URL)
-    assert catalog["stac_extensions"] == ["https://schemas.portolan-sdi.org/portolan/v0.2.0/schema.json"]
+    assert catalog["stac_extensions"] == ["https://schemas.portolan-sdi.org/portolan/v0.3.0/schema.json"]
 
 
 def collection(items=None):

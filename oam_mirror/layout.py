@@ -17,7 +17,7 @@ from collections import defaultdict
 
 from oam_mirror.transform import COLLECTION_BY_LICENSE, EARLY_GROUP, collection_for, transform_item, year_group
 
-PORTOLAN_SCHEMA = "https://schemas.portolan-sdi.org/portolan/v0.2.0/schema.json"
+PORTOLAN_SCHEMA = "https://schemas.portolan-sdi.org/portolan/v0.3.0/schema.json"
 UPSTREAM_COLLECTION_URL = "https://api.imagery.hotosm.org/stac/collections/openaerialmap"
 UPSTREAM_SITE_URL = "https://imagery.hotosm.org/"
 

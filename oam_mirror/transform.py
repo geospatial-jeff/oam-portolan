@@ -22,6 +22,8 @@ COLLECTION_BY_LICENSE = {
 FIRST_GROUPED_YEAR = 2010
 EARLY_GROUP = "pre-2010"
 
+PMTILES_TYPE = "application/vnd.pmtiles"
+
 WITHHELD = "Withheld (email address removed by mirror)"
 
 _EMAIL = re.compile(r"[\w.+-]+@[\w-]+(\.[\w-]+)+")
@@ -125,6 +127,17 @@ def transform_item(upstream, collection_id):
     for asset in item["assets"].values():
         if asset["href"].startswith("http://"):
             asset["href"] = "https://" + asset["href"][len("http://") :]
+
+    # Some upstream tile archives give proj:code as a bare integer (3857).
+    # Projection v2.0.0 requires a string such as "EPSG:3857".
+    for asset in item["assets"].values():
+        if isinstance(asset.get("proj:code"), int) and not isinstance(asset["proj:code"], bool):
+            asset["proj:code"] = f"EPSG:{asset['proj:code']}"
+
+    # PMTiles archives render the scene, and PORTO-FMT-062 requires the visual role.
+    for asset in item["assets"].values():
+        if asset.get("type") == PMTILES_TYPE and "visual" not in asset.get("roles", []):
+            asset["roles"] = [*asset.get("roles", []), "visual"]
 
     # The unmodified upload is the upstream original the COG was derived from.
     if "original" in item["assets"]:

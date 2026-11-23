@@ -167,3 +167,15 @@ def test_year_group_uses_start_datetime():
 
 def test_year_group_folds_early_years():
     assert year_group(upstream_item(start_datetime="1944-12-31T13:00:00Z")) == "pre-2010"
+
+
+def test_transform_writes_integer_proj_code_as_epsg_string():
+    raw = upstream_item()
+    raw["assets"]["mbtiles"] = {"href": "https://x/a.mbtiles", "type": "application/vnd.mbtiles", "roles": ["tiles"], "proj:code": 3857}
+    assert transform_item(raw, "oam-cc-by-4-0")["assets"]["mbtiles"]["proj:code"] == "EPSG:3857"
+
+
+def test_transform_gives_pmtiles_the_visual_role():
+    raw = upstream_item()
+    raw["assets"]["pmtiles"] = {"href": "https://x/a.pmtiles", "type": "application/vnd.pmtiles", "roles": ["tiles"]}
+    assert transform_item(raw, "oam-cc-by-4-0")["assets"]["pmtiles"]["roles"] == ["tiles", "visual"]

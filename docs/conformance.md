@@ -14,18 +14,17 @@ widened allow-list is a false claim about what this catalog conforms to.
 
 ## The rashid version floor
 
-The gate needs rashid `>=0.1.8,<0.2.0`. It reads `rashid --version` and fails
+The gate needs rashid `>=0.4.0,<0.5.0`. It reads `rashid --version` and fails
 outside that range. It also fails when rashid is absent, and prints the install
 command. A skip would report a green run for a catalog that no validator read.
 
-The floor is 0.1.8 because it is the first rashid that accepts the v0.2.0 root
-`self` link this catalog carries (PORTO-CORE-081). Rules PTL-LNK-007,
-PTL-LNK-008, PTL-LNK-009 and PTL-AST-006 do not exist below 0.1.5. The gate asserts all four. An older rashid
-reports a pass for a catalog that it never checked against them. The same range
-is in `portolan-cli/pyproject.toml` and in the CI install step.
+The floor is 0.4.0 because it is the first rashid that bundles the Portolan
+v0.3.0 profile this catalog declares. An older rashid applies the v0.2.0 rules
+and reports a pass for a catalog that it never checked against v0.3.0. The same
+range is in the CI install step.
 
-The upper bound stops an unreviewed 0.2 rule set from changing what this gate
-means. Raise both bounds together when you move to 0.2, and read the new rules
+The upper bound stops an unreviewed 0.5 rule set from changing what this gate
+means. Raise both bounds together when you move to 0.5, and read the new rules
 first.
 
 This file also records workarounds for the other validator CI runs. Those are
@@ -35,13 +34,14 @@ something.
 
 ## Accepted deviations
 
-`ACCEPTED` is empty. One finding pair is exempted by shape instead, because the
+`ACCEPTED` is empty. Three findings are exempted by shape instead, because the
 catalog is correct where it is published and only the checkout is partial.
 
 | Rule | Where | Why accepted | Tracking |
 |---|---|---|---|
 | PTL-LNK-006 | `child` links from the three `oam-*/collection.json` to `./<year>/catalog.json` | The year tree is generated to the bucket, not committed | By design, see below |
 | PTL-COL-005 | the three `oam-*/collection.json` | Their items are in the uncommitted year tree | By design, see below |
+| PTL-AST-007 | the three `oam-*/collection.json` | Their data assets, the COGs, are on the items in the uncommitted year tree | By design, see below |
 
 ### The generated year tree
 
@@ -52,11 +52,12 @@ are generated instead, as the
 recommends for large item collections. `python -m oam_mirror.build` writes the
 full catalog to `build/site/`, and `tools/upload_generated.py` uploads the part
 git does not track. Fields of the World publishes its Sentinel-2 item tree the
-same way, with the same two scoped exemptions.
+same way, with the same scoped exemptions.
 
 A checkout therefore shows each collection with relative `child` links to year
-catalogs that are absent, and with an item mirror (`items.parquet`, referenced
-by its published URL) but no items. Both hold in the published catalog. The
+catalogs that are absent, with an item mirror (`items.parquet`, referenced by
+its published URL) but no items, and with no `data` asset, because each COG is
+a `data` asset of its item. All three hold in the published catalog. The
 full catalog is checked before every upload with
 `portolan check --data-scope local` in `build/site/`.
 
